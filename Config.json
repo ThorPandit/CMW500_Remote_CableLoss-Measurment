@@ -1,0 +1,15 @@
+{
+    "signal_generator": {
+        "frequency_range": {
+            "start": 0.9E+9,
+            "stop": 2.6E+10,
+            "step": 0.9E+9
+        },
+        "power_levels": [-50],
+        "attenuation": "2"
+    },
+    "signal_analyzer": {
+        "attenuation": "2"
+    },
+    "timeout": 3000
+}

@@ -1,73 +1,97 @@
+import json
 import pyvisa
 import logging
 
-# Configure the logging settings
+# Configure logging
 logging.basicConfig(
-    level=logging.INFO,  # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    format='%(asctime)s - %(levelname)s - %(message)s'  # Format of log messages
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
+# Function to load configuration from JSON
+def load_config(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            config = json.load(file)
+            return config
+    except FileNotFoundError:
+        print(f"Configuration file '{file_path}' not found.")
+        exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON configuration: {e}")
+        exit(1)
+
+# Load configuration
+config = load_config('Config.json')
+
+# Parse configuration values
+RFGenerator_Config = config["signal_generator"]
+MEASAnalyzer_Config = config["signal_analyzer"]
+timeout = config["timeout"]
+
+frequency = RFGenerator_Config["frequency"]
+power_level = RFGenerator_Config["power_level"]
+attenuation = RFGenerator_Config["attenuation"]
+
+# Initialize VISA connection
 rm = pyvisa.ResourceManager()
-cmw = rm.open_resource("TCPIP::192.10.9.56::INSTR")
+cmw = rm.open_resource("TCPIP::192.10.9.79::INSTR")
 
-cmw.timeout=1000
-
-# Initial system-reset
+# Reset and initialize
 cmw.write('*RST; *OPC?; *CLS; *OPC')
-logging.info(f'17-Identity:, {cmw.query("*IDN?")}')
-cmw.timeout=2000
+logging.info(f'CMW_Identity:, {cmw.query("*IDN?")}')
+cmw.timeout = timeout
 
-print(f'L20: {cmw.query("ROUTe:GPRF:GEN1?")}')  #SALone: An RF signal is generated (standalone scenario), IQOut: The generated baseband signal is sent to I/Q out (digital baseband interface)
-print(f'L22: {cmw.query("ROUTe:GPRF:GEN1:SCENario?")}')
+# Configure signal generator on RF1COM
+cmw.write("ROUTe:GPRF:GEN:SCENario:SALone RF1COM, TX1")
+cmw.write(f"SOURce:GPRF:GEN1:RFSettings:FREQuency {frequency}")
+cmw.write(f"SOURce:GPRF:GEN1:RFSettings:LEVel {power_level}")
+cmw.write("SOURce:GPRF:GEN1:BBMode CW")
+cmw.write(f"SOURce:GPRF:GEN1:RFSettings:EATTenuation {attenuation}")
+cmw.write("SOURce:GPRF:GEN1:STATe ON")
+print(cmw.query("*OPC?"))
+cmw.timeout = timeout
 
-cmw.timeout=2000
+# Confirm generator is ON
+print(f"Signal Generator State: {cmw.query('SOURce:GPRF:GEN1:STATe?')}")
 
-#route RF signal to RF1COM
-cmw.query("ROUTe:GPRF:GEN1:SCENario:SALone RF1C, TX1")  #<TXConnector>, <TXConverter>
-cmw.timeout=2000
+cmw.write("*CLS")
 
-#Configure the sequencer list entry: frequency, level, signal type.
-cmw.write('SOURce:GPRF:GEN1:RFSettings:FREQuency 1.000000E+009')
-logging.info(f'Errors:, {cmw.query("SYST:ERR?")}')
-cmw.timeout=1000
-cmw.write('SOURce:GPRF:GEN1:RFSettings:LEVel -70')
-logging.info(f'Errors:, {cmw.query("SYST:ERR?")}')
-cmw.timeout=1000
-cmw.write('SOURce:GPRF:GEN1:RFSettings:PEPower?')
-logging.info(f'Errors:, {cmw.query("SYST:ERR?")}')
-cmw.timeout=1000
-cmw.write('SOURce:GPRF:GEN1:BBMode CW')
-logging.info(f'Errors:, {cmw.query("SYST:ERR?")}')
-cmw.timeout=1000
+# Configure signal analyzer on RF2COM
+Measurment_frequency = MEASAnalyzer_Config["frequency"]
+Measurment_attenuation = MEASAnalyzer_Config["attenuation"]
 
-# Route output signal for R&S CMW100
-# Select the connector bench.
-# Activate the first four connectors / deactivate the last four.
-# Deactivate the first connector.
+print(f'{cmw.query("ROUTe:GPRF:MEAS2?")}')
+cmw.write("ROUTe:GPRF:MEAS2:SCENario:SALone RF2C, RX1")
+cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:FREQuency {Measurment_frequency}")
+cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:EATTenuation {Measurment_attenuation}")
+logging.info(f'Attenuation Errors:, {cmw.query("SYST:ERR?")}')
 
-cmw.write('ROUTe:GPRF:GEN:SCENario:SALone R118, TX1')
-logging.info(f'26-Errors:, {cmw.query("SYST:ERR?")}')
-cmw.timeout=1000
+# Start and fetch received power measurement
+cmw.write("INITiate:GPRF:MEAS2:POWer")
+cmw.query("*OPC?")
 
-cmw.write('CONFigure:GPRF:GEN:CMWS:USAGe:TX:ALL R118, ON, ON, ON, ON, OFF, OFF, OFF, OFF')
-logging.info(f'Errors:, {cmw.query("SYST:ERR?")}')
+# Fetch received power 'Average for static result'
+received_power_raw = cmw.query("FETCh:GPRF:MEAS2:POWer:AVERage?")
+print(f"Raw Received Power Response: {received_power_raw}")
 
-cmw.write('CONFigure:GPRF:GEN:CMWS:USAGe:TX R11, OFF')
-logging.info(f'Errors:, {cmw.query("SYST:ERR?")}')
+# Parse and calculate cable loss
+try:
+    received_power_status, received_power_value = received_power_raw.strip().split(',')
+    received_power = float(received_power_value)
 
-#Define external attenuation.
-cmw.write('SOURce:GPRF:GEN:RFSettings:EATTenuation 2')
-logging.info(f'Errors:, {cmw.query("SYST:ERR?")}')
-cmw.timeout=1000
+    print(f"Received Power: {received_power} dBm")
 
-#Set repetition to continuous.
-cmw.write('SOURce:GPRF:GEN:SEQuencer:REPetition CONT')
-logging.info(f'Errors:, {cmw.query("SYST:ERR?")}')
-cmw.timeout=1000
+    # Calculate cable loss
+    transmitted_power = float(power_level)
+    cable_loss = transmitted_power - received_power
+    print(f'{cmw.query("SOURce:GPRF:GEN1:RFSettings:FREQuency?")}')
+    print(f'{cmw.query("FETCh:GPRF:MEAS2:EPSensor?")}')
+    print(f"Cable Loss: {cable_loss:.2f} dB")
 
-#Switch on the sequencer. With command synchronization, the queried
-print(f"{cmw.query('SOURce:GPRF:GEN:SEQuencer:STATe ON; *OPC?')}")
-cmw.query('SOURce:GPRF:GEN:SEQuencer:STATe?')
+except ValueError as e:
+    print(f"Error parsing received power: {e}")
+    logging.error(f"Error parsing received power: {e}")
 
-#GPRF Generator
-
+# Close connection
+cmw.close()
