@@ -1,7 +1,6 @@
 import json
 import pyvisa
 import logging
-import numpy as np  # For frequency range generation
 import matplotlib.pyplot as plt  # For graphing
 
 # Configure logging
@@ -30,20 +29,15 @@ sg_config = config["signal_generator"]
 sa_config = config["signal_analyzer"]
 timeout = config["timeout"]
 
-# Parse frequency range and power levels
-frequency_range = sg_config["frequency_range"]
-start_freq = frequency_range["start"]
-stop_freq = frequency_range["stop"]
-step_freq = frequency_range["step"]
-frequencies = np.arange(start_freq, stop_freq + step_freq, step_freq)  # Generate frequency range
-
+# Use fixed frequencies from JSON
+frequencies = sg_config["frequencies"]  # Fixed list of frequencies
 power_levels = sg_config["power_levels"]  # List of power levels
 attenuation = sg_config["attenuation"]
 sa_attenuation = sa_config["attenuation"]
 
 # Initialize VISA connection
 rm = pyvisa.ResourceManager()
-cmw = rm.open_resource("TCPIP::192.10.9.79::INSTR")
+cmw = rm.open_resource("TCPIP::192.10.9.91::INSTR")
 
 # Reset and initialize
 cmw.write('*RST; *OPC?; *CLS; *OPC')
@@ -53,7 +47,7 @@ cmw.timeout = timeout
 # Data storage for plotting
 results = {power_level: [] for power_level in power_levels}
 
-# Loop through frequencies and power levels
+# Loop through fixed frequencies and power levels
 for frequency in frequencies:
     for power_level in power_levels:
         print(f"\nTesting for Frequency: {frequency} Hz at Power Level: {power_level} dBm")

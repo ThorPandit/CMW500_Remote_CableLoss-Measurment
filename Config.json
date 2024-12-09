@@ -1,10 +1,6 @@
 {
     "signal_generator": {
-        "frequency_range": {
-            "start": 0.9E+9,
-            "stop": 2.6E+10,
-            "step": 0.9E+9
-        },
+        "frequencies": [0.9E+9, 1.8E+9, 2.1E+9, 2.3E+9, 2.6E+9],
         "power_levels": [-50],
         "attenuation": "2"
     },

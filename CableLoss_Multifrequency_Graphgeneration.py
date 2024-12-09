@@ -63,6 +63,8 @@ for frequency in frequencies:
         cmw.write("SOURce:GPRF:GEN1:STATe ON")
         cmw.query("*OPC?")  # Ensure signal is active
 
+        cmw.timeout = timeout
+
         # Confirm generator is ON
         print(f"Signal Generator State: {cmw.query('SOURce:GPRF:GEN1:STATe?')}")
 
@@ -91,7 +93,7 @@ for frequency in frequencies:
 
             # Calculate cable loss
             transmitted_power = float(power_level)
-            cable_loss = transmitted_power - received_power
+            cable_loss =  received_power-transmitted_power
             print(f"Cable Loss: {cable_loss:.2f} dB")
 
             # Store results for plotting
@@ -103,12 +105,18 @@ for frequency in frequencies:
                 "Power Level (dBm)": power_level,
                 "Received Power (dBm)": received_power,
                 "Cable Loss (dB)": cable_loss
-            })
+            }
+
+            )
 
         except ValueError as e:
             print(f"Error parsing received power: {e}")
             logging.error(f"Error parsing received power: {e}")
 
+        print('reaching end')
+        cmw.write("SOURce:GPRF:GEN1:STATe OFF")
+        print(report_data.append)
+        cmw.timeout = timeout
 
 # Close connection
 cmw.close()
@@ -123,17 +131,25 @@ with open(csv_file, mode='w', newline='') as file:
 
 print(f"\nReport generated: {csv_file}")
 
-# Plot the results
+# plot the results
 plt.figure(figsize=(10, 6))
 for power_level, data in results.items():
     freqs, losses = zip(*data)  # Separate frequencies and cable loss
     plt.plot(freqs, losses, marker='o', label=f"Power Level: {power_level} dBm")
 
-plt.title("Cable Loss vs Frequency")
-plt.xlabel("Frequency (MHz)")
-plt.ylabel("Cable Loss (dB)")
-plt.grid(True)
-plt.legend()
+
+    # Add values at each data point
+    for x, y in zip(freqs, losses):
+        plt.text(x, y + 0.2, f"{y:.2f}", fontsize=9, ha='center', color='blue')  # Annotate with cable loss values
+
+
+plt.title("Cable Loss vs Frequency",fontsize=14)
+plt.xlabel("Frequency (MHz)",fontsize=12)
+plt.ylabel("Cable Loss (dB)",fontsize=12)
+
+# Add grid, legend, and adjust layout
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend(fontsize=10)
 plt.tight_layout()
 
 # Save the plot as an image

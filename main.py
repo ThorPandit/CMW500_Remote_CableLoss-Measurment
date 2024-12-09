@@ -29,13 +29,13 @@ RFGenerator_Config = config["signal_generator"]
 MEASAnalyzer_Config = config["signal_analyzer"]
 timeout = config["timeout"]
 
-frequency = RFGenerator_Config["frequency"]
-power_level = RFGenerator_Config["power_level"]
+frequency = RFGenerator_Config["frequencies"]
+power_level = RFGenerator_Config["power_levels"]
 attenuation = RFGenerator_Config["attenuation"]
 
 # Initialize VISA connection
 rm = pyvisa.ResourceManager()
-cmw = rm.open_resource("TCPIP::192.10.9.79::INSTR")
+cmw = rm.open_resource("TCPIP::192.10.9.91::INSTR")
 
 # Reset and initialize
 cmw.write('*RST; *OPC?; *CLS; *OPC')
