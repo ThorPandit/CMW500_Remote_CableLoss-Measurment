@@ -104,7 +104,7 @@ cmw_ip_entry = tk.Entry(root, width=50)
 cmw_ip_entry.grid(row=0, column=1, padx=10, pady=10)
 
 # Predefined Frequencies Section
-tk.Label(root, text="Select Frequencies (Hz):").grid(row=1, column=0, padx=10, pady=10, sticky="w")
+tk.Label(root, text="Select Frequencies (MHz):").grid(row=1, column=0, padx=10, pady=10, sticky="w")
 predefined_frequencies = [900e6, 1800e6, 2100e6, 2300e6, 2600e6]  # Hz
 predefined_freq_vars = {}
 for i, freq in enumerate(predefined_frequencies):

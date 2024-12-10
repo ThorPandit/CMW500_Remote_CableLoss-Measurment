@@ -88,7 +88,7 @@ def main():
             plt.text(x, y, f"{y:.2f}", fontsize=8)
 
     plt.title("Cable Loss vs Frequency")
-    plt.xlabel("Frequency (Hz)")
+    plt.xlabel("Frequency (MHz)")
     plt.ylabel("Cable Loss (dB)")
     plt.legend()
     plt.grid()
