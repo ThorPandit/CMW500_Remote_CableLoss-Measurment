@@ -1,14 +1,30 @@
+import pyvisa_py
 import tkinter as tk
 from tkinter import messagebox, IntVar
 import json
-import subprocess
 import webbrowser
+import os
+from CableLoss_Multifrequency_Graphgeneration import main as run_measurement
 
-# Function to open the link
+# Function to run the measurement script
+def run_script():
+    try:
+        run_measurement()  # Call the main function of the measurement script
+        messagebox.showinfo("Success", "Measurement completed successfully!")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to execute the script: {e}")
+
+# Get the directory where the script is running
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Update paths to use base_dir
+config_path = os.path.join(base_dir, "Config.json")
+
+# Function to open LinkedIn
 def open_link1():
     webbrowser.open("https://www.linkedin.com/in/shubham-kumar-bhardwaj-773368335/")  # Replace with your URL
 
-# Function to open the link
+# Function to open GitHub
 def open_link2():
     webbrowser.open("https://github.com/ThorPandit/CMW500_Remote_CableLoss-Measurment/tree/main")  # Replace with your URL
 
@@ -69,7 +85,7 @@ def update_config():
         }
 
         # Save the updated configuration to Config.json
-        with open("Config.json", "w") as config_file:
+        with open(config_path, "w") as config_file:
             json.dump(config, config_file, indent=4)
 
         # Notify the user
@@ -77,15 +93,6 @@ def update_config():
 
     except Exception as e:
         messagebox.showerror("Error", f"Failed to update configuration: {e}")
-
-# Function to run the measurement script
-def run_script():
-    try:
-        # Assuming your main script is named `CableLoss_Multifrequency_Graphgeneration.py`
-        subprocess.run(["python", "CableLoss_Multifrequency_Graphgeneration.py"], check=True)
-        messagebox.showinfo("Success", "Measurement completed successfully!")
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to execute the script: {e}")
 
 # Create the main Tkinter window
 root = tk.Tk()
@@ -161,8 +168,12 @@ run_button.grid(row=16, column=1, padx=10, pady=20)
 
 tk.Label(root, text="Developed by Mr. Shubham Kumar Bhardwaj").grid(row=17, column=0, padx=10, pady=10, sticky="w")
 # Add a label as a hyperlink
-xxx = tk.Label(root, text="Linkedin Profile", fg="blue", cursor="hand2")  # Create the Label
-xxx.grid(row=17, column=2, padx=10, pady=10, sticky="w")  # Place the Label using grid
-xxx.bind("<Button-1>", lambda e: open_link1())  # Bind the click event to the open_link function
+linkedin_label = tk.Label(root, text="LinkedIn Profile", fg="blue", cursor="hand2")
+linkedin_label.grid(row=17, column=2, padx=10, pady=10, sticky="w")
+linkedin_label.bind("<Button-1>", lambda e: open_link1())
+
+github_label = tk.Label(root, text="GitHub Repository", fg="blue", cursor="hand2")
+github_label.grid(row=17, column=3, padx=10, pady=10, sticky="w")
+github_label.bind("<Button-1>", lambda e: open_link2())
 
 root.mainloop()
