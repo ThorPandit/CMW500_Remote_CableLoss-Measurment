@@ -27,4 +27,13 @@ Process:-
 4. A CSV will be created and a graph will be generated.
 5. Final CSV and Graph will be used.
 
+UI open as below:
+![image](https://github.com/user-attachments/assets/1db627aa-49e2-4a8e-bd7f-9bd1e939ee77)
+
+CMW500 IP address entry is mandatory. select the required frequencies, power and attenuation for graph generation.
+
+result will be as:
+![image](https://github.com/user-attachments/assets/a7dbf96d-20b3-4817-bf7d-0d001a3ae5e8)
+
+
    If you have any issue can contact me on: **shubham.kumar.bhardwaj@gmail.com** Please mark subject as: **GITHUB Issue: CMW500_Remote_CableLoss-Measurment**
