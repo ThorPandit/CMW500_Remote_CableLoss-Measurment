@@ -1,3 +1,4 @@
+#for any  query contact on Shubham.kumar.bhardwaj@gmail.com with tag:GITHUB ISSUE XXXISSUEXXX
 import json
 import pyvisa
 import logging
@@ -38,7 +39,7 @@ sa_attenuation = sa_config["attenuation"]
 
 # Initialize VISA connection
 rm = pyvisa.ResourceManager()
-cmw = rm.open_resource("TCPIP::192.10.9.91::INSTR")
+cmw = rm.open_resource("TCPIP::192.10.9.126::INSTR")
 
 # Reset and initialize
 cmw.write('*RST; *OPC?; *CLS; *OPC')
@@ -70,13 +71,13 @@ for frequency in frequencies:
 
         cmw.write("*CLS")
 
-        # Configure signal analyzer on RF2COM
+        # Power Measurment at RF2C
         cmw.write("ROUTe:GPRF:MEAS2:SCENario:SALone RF2C, RX1")
         cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:FREQuency {frequency}")
         cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:EATTenuation {sa_attenuation}")
         logging.info(f'Attenuation Errors:, {cmw.query("SYST:ERR?")}')
 
-        # Start and fetch received power measurement
+        #Start the Measurment
         cmw.write("INITiate:GPRF:MEAS2:POWer")
         cmw.query("*OPC?")
 
@@ -93,8 +94,11 @@ for frequency in frequencies:
 
             # Calculate cable loss
             transmitted_power = float(power_level)
-            cable_loss =  received_power-transmitted_power
-            print(f"Cable Loss: {cable_loss:.2f} dB")
+            if(received_power>=transmitted_power):
+                cable_loss =  received_power-transmitted_power
+                print(f"Cable Loss: {cable_loss:.2f} dB")
+            else:
+                cable_loss=0
 
             # Store results for plotting
             results[power_level].append((frequency, cable_loss))
