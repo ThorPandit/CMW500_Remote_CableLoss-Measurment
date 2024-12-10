@@ -4,10 +4,13 @@ import json
 import subprocess
 import webbrowser
 
+# Function to open the link
+def open_link1():
+    webbrowser.open("https://www.linkedin.com/in/shubham-kumar-bhardwaj-773368335/")  # Replace with your URL
 
 # Function to open the link
-def open_link():
-    webbrowser.open("https://www.linkedin.com/in/shubham-kumar-bhardwaj-773368335/")  # Replace with your URL
+def open_link2():
+    webbrowser.open("https://github.com/ThorPandit/CMW500_Remote_CableLoss-Measurment/tree/main")  # Replace with your URL
 
 # Function to update the JSON configuration
 def update_config():
@@ -151,15 +154,15 @@ custom_attenuation_entry.grid(row=6, column=1, padx=10, pady=10)
 
 # Buttons
 update_button = tk.Button(root, text="Update Config", command=update_config)
-update_button.grid(row=7, column=0, padx=10, pady=20)
+update_button.grid(row=16, column=0, padx=10, pady=20)
 
 run_button = tk.Button(root, text="Run Measurement", command=run_script)
-run_button.grid(row=7, column=1, padx=10, pady=20)
+run_button.grid(row=16, column=1, padx=10, pady=20)
 
-tk.Label(root, text="Developed by Mr. Shubham Kumar Bhardwaj").grid(row=16, column=0, padx=10, pady=10, sticky="w")
+tk.Label(root, text="Developed by Mr. Shubham Kumar Bhardwaj").grid(row=17, column=0, padx=10, pady=10, sticky="w")
 # Add a label as a hyperlink
 xxx = tk.Label(root, text="Linkedin Profile", fg="blue", cursor="hand2")  # Create the Label
-xxx.grid(row=17, column=0, padx=10, pady=10, sticky="w")  # Place the Label using grid
-xxx.bind("<Button-1>", lambda e: open_link())  # Bind the click event to the open_link function
+xxx.grid(row=17, column=2, padx=10, pady=10, sticky="w")  # Place the Label using grid
+xxx.bind("<Button-1>", lambda e: open_link1())  # Bind the click event to the open_link function
 
 root.mainloop()
