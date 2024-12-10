@@ -172,8 +172,8 @@ linkedin_label = tk.Label(root, text="LinkedIn Profile", fg="blue", cursor="hand
 linkedin_label.grid(row=17, column=2, padx=10, pady=10, sticky="w")
 linkedin_label.bind("<Button-1>", lambda e: open_link1())
 
-github_label = tk.Label(root, text="GitHub Repository", fg="blue", cursor="hand2")
-github_label.grid(row=17, column=3, padx=10, pady=10, sticky="w")
-github_label.bind("<Button-1>", lambda e: open_link2())
+#github_label = tk.Label(root, text="GitHub Repository", fg="blue", cursor="hand2")
+#github_label.grid(row=17, column=3, padx=10, pady=10, sticky="w")
+#github_label.bind("<Button-1>", lambda e: open_link2())
 
 root.mainloop()
