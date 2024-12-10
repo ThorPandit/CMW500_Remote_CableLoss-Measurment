@@ -1,11 +1,18 @@
 {
+    "cmw_ip": "192.10.9.126",
     "signal_generator": {
-        "frequencies": [0.9E+9, 1.8E+9, 2.1E+9, 2.3E+9, 2.6E+9],
-        "power_levels": [-50],
-        "attenuation": "2"
+        "frequencies": [
+            900000000.0,
+            1800000000.0,
+            2100000000.0
+        ],
+        "power_levels": [
+            -50
+        ],
+        "attenuation": 2
     },
     "signal_analyzer": {
-        "attenuation": "2"
+        "attenuation": 2
     },
     "timeout": 3000
 }
