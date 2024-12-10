@@ -35,5 +35,7 @@ CMW500 IP address entry is mandatory. select the required frequencies, power and
 result will be as:
 ![image](https://github.com/user-attachments/assets/a7dbf96d-20b3-4817-bf7d-0d001a3ae5e8)
 
+## Download the Executable
+You can download the precompiled `.exe` file from the https://github.com/ThorPandit/CMW500_Remote_CableLoss-Measurment/releases/tag/v1.0.0
 
-   If you have any issue can contact me on: **shubham.kumar.bhardwaj@gmail.com** Please mark subject as: **GITHUB Issue: CMW500_Remote_CableLoss-Measurment**
+If you have any issue can contact me on: **shubham.kumar.bhardwaj@gmail.com** Please mark subject as: **GITHUB Issue: CMW500_Remote_CableLoss-Measurment**
