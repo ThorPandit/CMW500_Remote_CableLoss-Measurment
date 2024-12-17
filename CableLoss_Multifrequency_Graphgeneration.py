@@ -29,6 +29,7 @@ def main():
     sg_config = config["signal_generator"]
     sa_config = config["signal_analyzer"]
     timeout = config["timeout"]
+    cmw_type=config["cmw_type"]
 
     frequencies = sg_config["frequencies"]
     power_levels = sg_config["power_levels"]
@@ -43,34 +44,115 @@ def main():
 
     results = {power_level: [] for power_level in power_levels}
     report_data = []
+    Gauss_BW=10
+    Usermargin=10
+    if(cmw_type=="CMW500"):
+        print("Testing started for CMW500")
+        for frequency in frequencies:
+            for power_level in power_levels:
+                try:
+                    cmw.query("ROUTe:GPRF:GEN1:SCENario:SALone?")
+                    cmw.write("ROUTe:GPRF:GEN1:SCENario:SALone RF1COM, TX1")
+                    cmw.write(f"SOURce:GPRF:GEN1:RFSettings:FREQuency {frequency}")
+                    cmw.write(f"SOURce:GPRF:GEN1:RFSettings:LEVel {power_level}")
+                    cmw.write("SOURce:GPRF:GEN1:BBMode CW")
+                    cmw.write(f"SOURce:GPRF:GEN1:RFSettings:EATTenuation {attenuation}")
+                    cmw.write("SOURce:GPRF:GEN1:STATe ON")
+                    cmw.query("*OPC?")
 
-    for frequency in frequencies:
-        for power_level in power_levels:
-            try:
-                cmw.write("ROUTe:GPRF:GEN:SCENario:SALone RF1COM, TX1")
-                cmw.write(f"SOURce:GPRF:GEN1:RFSettings:FREQuency {frequency}")
-                cmw.write(f"SOURce:GPRF:GEN1:RFSettings:LEVel {power_level}")
-                cmw.write("SOURce:GPRF:GEN1:BBMode CW")
-                cmw.write(f"SOURce:GPRF:GEN1:RFSettings:EATTenuation {attenuation}")
-                cmw.write("SOURce:GPRF:GEN1:STATe ON")
-                cmw.query("*OPC?")
+                    cmw.write("*CLS")
+                    cmw.write("ROUTe:GPRF:MEAS2:SCENario:SALone RF2C, RX1")
+                    cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:FREQuency {frequency}")
+                    cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:EATTenuation {sa_attenuation}")
+                    cmw.write("CONFigure:GPRF:MEAS2:POWer:MODE POWer")
+                    cmw.write("CONFigure:GPRF:MEAS:POWer:FILTer:GAUSs:BWIDth 1E+4")
+                    cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:ENPower {power_level}")
+                    cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:UMARgin {Usermargin}")
+                    cmw.write("INITiate:GPRF:MEAS2:POWer")
+                    cmw.query("*OPC?")
 
-                cmw.write("*CLS")
-                cmw.write("ROUTe:GPRF:MEAS2:SCENario:SALone RF2C, RX1")
-                cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:FREQuency {frequency}")
-                cmw.write(f"CONFigure:GPRF:MEAS2:RFSettings:EATTenuation {sa_attenuation}")
-                cmw.write("INITiate:GPRF:MEAS2:POWer")
-                cmw.query("*OPC?")
+                    raw_power = cmw.query("FETCh:GPRF:MEAS2:POWer:AVERage?").strip().split(',')
+                    received_power = float(raw_power[1])
+                    cmw.write("SOURce:GPRF:GEN1:STATe OFF")
+                    cmw.write("ABORt:GPRF:MEAS2:POWer")
 
-                raw_power = cmw.query("FETCh:GPRF:MEAS2:POWer:AVERage?").strip().split(',')
-                received_power = float(raw_power[1])
+                    #cable_loss = max(0, received_power - float(power_level))
+                    cable_loss=float(power_level)-received_power
+                    results[power_level].append((frequency, cable_loss))
+                    report_data.append({"Frequency (Hz)": frequency, "Power Level (dBm)": power_level,
+                                        "Received Power (dBm)": received_power, "Cable Loss (dB)": cable_loss})
+                except Exception as e:
+                    logging.error(f"Error: {e}")
+    else:
+        print("Testing started for CMW100")
+        for frequency in frequencies:
+            # print(frequency)
+            for power_level in power_levels:
+                # print(power_level)
+                try:
+                    cmw.timeout = timeout
+                    # print(f"going to test for {power_level} & {frequency}")
+                    cmw.write("ROUTe:GPRF:GEN1:SCENario:SALone R118, TX11")
+                    cmw.write(f"SOURce:GPRF:GEN1:RFSettings:FREQuency {frequency}")
+                    cmw.write(f"SOURce:GPRF:GEN1:RFSettings:LEVel {power_level}")
+                    cmw.write("SOURce:GPRF:GEN1:BBMode CW")
+                    cmw.write(f"SOURce:GPRF:GEN1:RFSettings:EATTenuation {attenuation}")
+                    cmw.timeout = timeout
+                    cmw.write("SOURce:GPRF:GEN1:STATe ON")
+                    cmw.query("*OPC?")
+                    cmw.write("*CLS")
+                    # print("Generator On cand clear the flags error:", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
 
-                cable_loss = max(0, received_power - float(power_level))
-                results[power_level].append((frequency, cable_loss))
-                report_data.append({"Frequency (Hz)": frequency, "Power Level (dBm)": power_level,
-                                    "Received Power (dBm)": received_power, "Cable Loss (dB)": cable_loss})
-            except Exception as e:
-                logging.error(f"Error: {e}")
+                    cmw.write("ROUTe:GPRF:MEAS:SCENario:SALone R12, RX11")  # RXConnector & RFConverter
+                    # print("Measurment setting", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+
+                    cmw.write(f"CONFigure:GPRF:MEAS:RFSettings:FREQuency {frequency}")
+                    # print("Measurment setting", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+                    cmw.write(f"CONFigure:GPRF:MEAS:RFSettings:EATTenuation {attenuation}")
+                    # print("Measurment setting", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+
+                    cmw.write("CONFigure:GPRF:MEAS:POWer:MODE POWer")
+                    # print("Measurment setting Gauss_BW", cmw.query("SYST:ERR?"))
+
+                    cmw.write("CONFigure:GPRF:MEAS:POWer:FILTer:TYPE GAUSs")
+                    # print("Measurment setting Gauss_BW", cmw.query("SYST:ERR?"))
+
+                    cmw.write(f"CONFigure:GPRF:MEAS:POWer:FILTer:GAUSs:BWIDth 1E+4")
+                    # print("Measurment setting Gauss_BW", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+
+                    cmw.write(f"CONFigure:GPRF:MEAS:RFSettings:ENPower {power_level}")
+                    # print("Measurment setting power_level", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+
+                    cmw.write(f"CONFigure:GPRF:MEAS:RFSettings:UMARgin {Usermargin}")
+                    # print("Measurment setting Usermargin", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+
+                    cmw.timeout = timeout
+
+                    cmw.write("INITiate:GPRF:MEAS:POWer")
+                    # print("Measurment setting POWer", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+                    cmw.query("*OPC?")
+                    # print(cmw.query("FETCh:GPRF:MEAS:POWer:AVERage?"))
+                    raw_power = cmw.query("FETCh:GPRF:MEAS:POWer:AVERage?").strip().split(',')
+                    cmw.timeout = timeout
+
+                    cmw.write("ABORt:GPRF:MEAS:POWer")
+                    cmw.timeout = timeout
+
+                    cmw.write("SOURce:GPRF:GEN1:STATe OFF")
+                    cmw.timeout = timeout
+
+                    received_power = float(raw_power[1])
+                    # print(received_power)
+
+                    # cable_loss = max(0,  float(power_level)-received_power)
+                    cable_loss=float(power_level)-received_power
+                    print(f"For Power: {power_level} dBm, for Frequency: {frequency} Khz")
+                    print(cable_loss)
+                    results[power_level].append((frequency, cable_loss))
+                    report_data.append({"Frequency (Hz)": frequency, "Power Level (dBm)": power_level,
+                                        "Received Power (dBm)": received_power, "Cable Loss (dB)": cable_loss})
+                except Exception as e:
+                    logging.error(f"Error: {e}")
 
     cmw.close()
 

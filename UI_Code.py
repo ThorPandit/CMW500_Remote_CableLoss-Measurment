@@ -4,11 +4,13 @@ from tkinter import messagebox, IntVar
 import json
 import webbrowser
 import os
-from CableLoss_Multifrequency_Graphgeneration import main as run_measurement
+#from CableLoss_Multifrequency_Graphgeneration import main as run_measurement
+from test import main as run_measurement
 
 # Function to run the measurement script
 def run_script():
     try:
+        messagebox.showinfo("Started", "Measurement started, please wait for final results")
         run_measurement()  # Call the main function of the measurement script
         messagebox.showinfo("Success", "Measurement completed successfully!")
     except Exception as e:
@@ -39,6 +41,11 @@ def update_config():
         # Collect selected predefined frequencies
         selected_frequencies = [
             freq for freq, var in predefined_freq_vars.items() if var.get()
+        ]
+
+        # Collect selected cmw type
+        selected_cmw_type = [
+            cmw_type for cmw_type, var in cmw_type_var.items() if var.get()
         ]
 
         # Collect selected predefined power levels
@@ -73,6 +80,7 @@ def update_config():
         # Update the JSON configuration
         config = {
             "cmw_ip": cmw_ip,
+            "cmw_type":selected_cmw_type,
             "signal_generator": {
                 "frequencies": selected_frequencies,
                 "power_levels": selected_power_levels,
@@ -114,11 +122,26 @@ for i, freq in enumerate(predefined_frequencies):
         row=i + 2, column=0, padx=10, sticky="w"
     )
 
+
+# Predefined Power Levels Section
+tk.Label(root, text="Select CMW Type:").grid(
+    row=len(predefined_frequencies) + 3, column=1, padx=10, pady=10, sticky="w"
+)
+CMW_type = ["CMW500", "CMW100"]  # dBm
+cmw_type_var = {}
+for i, cmw in enumerate(CMW_type):
+    var = IntVar()
+    cmw_type_var[cmw] = var
+    tk.Checkbutton(root, text=f"{cmw}", variable=var).grid(
+        row=len(predefined_frequencies) + 4 + i, column=1, padx=10, sticky="w"
+    )
+
+
 # Predefined Power Levels Section
 tk.Label(root, text="Select Power Levels (dBm):").grid(
     row=len(predefined_frequencies) + 3, column=0, padx=10, pady=10, sticky="w"
 )
-predefined_power_levels = [-50, -60, -70]  # dBm
+predefined_power_levels = [-50, -40, -30, -20, -10, 0]  # dBm
 predefined_power_vars = {}
 for i, power in enumerate(predefined_power_levels):
     var = IntVar()
@@ -129,15 +152,15 @@ for i, power in enumerate(predefined_power_levels):
 
 # Predefined Attenuation Section
 tk.Label(root, text="Select Attenuation (dB):").grid(
-    row=len(predefined_frequencies) + len(predefined_power_levels) + 4, column=0, padx=10, pady=10, sticky="w"
+    row=len(predefined_frequencies) + len(CMW_type) + 4, column=1, padx=10, pady=10, sticky="w"
 )
-predefined_attenuations = [2, 5, 10]  # dB
+predefined_attenuations = [0, 2]  # dB
 predefined_attenuation_vars = {}
 for i, attenuation in enumerate(predefined_attenuations):
     var = IntVar()
     predefined_attenuation_vars[attenuation] = var
     tk.Checkbutton(root, text=f"{attenuation} dB", variable=var).grid(
-        row=len(predefined_frequencies) + len(predefined_power_levels) + 5 + i, column=0, padx=10, sticky="w"
+        row=len(predefined_frequencies) + len(CMW_type) + 5 + i, column=1, padx=10, sticky="w"
     )
 
 # Custom Inputs Section

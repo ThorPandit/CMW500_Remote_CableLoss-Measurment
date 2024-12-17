@@ -1,19 +1,28 @@
 {
-    "cmw_ip": "192.10.9.126",
+    "cmw_ip": "192",
+    "cmw_type": [
+        "CMW500"
+    ],
     "signal_generator": {
         "frequencies": [
             900000000.0,
             1800000000.0,
             2100000000.0,
-            2300000000.0
+            2300000000.0,
+            2600000000.0
         ],
         "power_levels": [
-            -50
+            -50,
+            -40,
+            -30,
+            -20,
+            -10,
+            0
         ],
-        "attenuation": 2
+        "attenuation": 0
     },
     "signal_analyzer": {
-        "attenuation": 2
+        "attenuation": 0
     },
     "timeout": 3000
 }
