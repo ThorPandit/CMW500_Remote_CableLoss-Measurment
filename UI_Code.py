@@ -5,7 +5,7 @@ import json
 import webbrowser
 import os
 #from CableLoss_Multifrequency_Graphgeneration import main as run_measurement
-from test import main as run_measurement
+from CableLoss_Multifrequency_Graphgeneration import main as run_measurement
 
 # Function to run the measurement script
 def run_script():

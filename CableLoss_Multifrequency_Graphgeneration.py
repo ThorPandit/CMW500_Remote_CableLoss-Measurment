@@ -76,8 +76,8 @@ def main():
                     cmw.write("SOURce:GPRF:GEN1:STATe OFF")
                     cmw.write("ABORt:GPRF:MEAS2:POWer")
 
-                    #cable_loss = max(0, received_power - float(power_level))
-                    cable_loss=float(power_level)-received_power
+                    cable_loss = max(0, received_power - float(power_level))
+                    #cable_loss=float(power_level)-received_power
                     results[power_level].append((frequency, cable_loss))
                     report_data.append({"Frequency (Hz)": frequency, "Power Level (dBm)": power_level,
                                         "Received Power (dBm)": received_power, "Cable Loss (dB)": cable_loss})
@@ -91,8 +91,13 @@ def main():
                 # print(power_level)
                 try:
                     cmw.timeout = timeout
-                    # print(f"going to test for {power_level} & {frequency}")
+                    #print(f"going to test for {power_level} & {frequency}")
                     cmw.write("ROUTe:GPRF:GEN1:SCENario:SALone R118, TX11")
+                    cmw.write("CONFigure:GPRF:GEN1:CMWS:USAGe:TX:ALL R118, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF")
+                    cmw.query("*OPC?")
+                    cmw.write("*CLS")
+                    #print("Connector Setting error:", cmw.query("SYST:ERR?"))
+                    #cmw.write("CONFigure:GPRF:GEN1:CMWS:USAGe:TX R11, OFF")
                     cmw.write(f"SOURce:GPRF:GEN1:RFSettings:FREQuency {frequency}")
                     cmw.write(f"SOURce:GPRF:GEN1:RFSettings:LEVel {power_level}")
                     cmw.write("SOURce:GPRF:GEN1:BBMode CW")
@@ -103,6 +108,7 @@ def main():
                     cmw.write("*CLS")
                     # print("Generator On cand clear the flags error:", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
 
+                    #print("going for measurment check")
                     cmw.write("ROUTe:GPRF:MEAS:SCENario:SALone R12, RX11")  # RXConnector & RFConverter
                     # print("Measurment setting", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
 
@@ -129,11 +135,15 @@ def main():
                     cmw.timeout = timeout
 
                     cmw.write("INITiate:GPRF:MEAS:POWer")
-                    # print("Measurment setting POWer", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+                    #print("Measurment setting POWer", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+
                     cmw.query("*OPC?")
                     # print(cmw.query("FETCh:GPRF:MEAS:POWer:AVERage?"))
+
                     raw_power = cmw.query("FETCh:GPRF:MEAS:POWer:AVERage?").strip().split(',')
                     cmw.timeout = timeout
+                    #print("Query issue:", cmw.query("SYST:ERR?"))  # Ensure no errors occurred
+                    #print(raw_power)
 
                     cmw.write("ABORt:GPRF:MEAS:POWer")
                     cmw.timeout = timeout
@@ -142,10 +152,11 @@ def main():
                     cmw.timeout = timeout
 
                     received_power = float(raw_power[1])
-                    # print(received_power)
+                    print(f"Receive power: {received_power}")
+                    print(f"Input Power: {float(power_level)}")
 
-                    # cable_loss = max(0,  float(power_level)-received_power)
-                    cable_loss=float(power_level)-received_power
+                    cable_loss = max(0,  float(power_level)-received_power)
+                    #cable_loss=float(power_level)-received_power
                     print(f"For Power: {power_level} dBm, for Frequency: {frequency} Khz")
                     print(cable_loss)
                     results[power_level].append((frequency, cable_loss))
